@@ -4,30 +4,22 @@
 import operator as op
 from plyplus import Grammar, STransformer
 
-calc_grammar = Grammar("""
-    start: expression;
-    expression: add;
-    ?add: (add add_symbol)? mul;
-    ?mul: (mul mul_symbol)? term;
-    @term: negate | number | '\(' expression '\)';
-    negate: '-' term;
-
-    number: '[\d.]+';
-    mul_symbol: '\*' | '/' | '%';
-    add_symbol: '\+' | '-';
-    WHITESPACE: '[ \t]+' (%ignore);
-""")
+calc_grammar = Grammar(open("calc.g"))
 
 class Calc(STransformer):
+
+    def __init__(self):
+        super()
 
     def _bin_operator(self, exp):
         arg1, operator_symbol, arg2 = exp.tail
 
         operator_func = { '+': op.add,
-        				  '-': op.sub,
-        				  '%': op.mod,
-        				  '*': op.mul,
-        				  '/': op.truediv }[operator_symbol]
+                          '-': op.sub,
+                          '%': op.mod,
+                          '*': op.mul,
+                          '/': op.truediv,
+                          '^': op.pow }[operator_symbol]
 
         print(exp.tail, '=>', operator_func(arg1, arg2))
         return operator_func(arg1, arg2)
@@ -38,6 +30,7 @@ class Calc(STransformer):
 
     add = _bin_operator
     mul = _bin_operator
+    exp = _bin_operator
 
 def main():
     calc = Calc()
@@ -45,7 +38,7 @@ def main():
         try:
             s = input('> ')
         except EOFError:
-        	break
+            break
         if s == '':
             break
         tree = calc_grammar.parse(s)
